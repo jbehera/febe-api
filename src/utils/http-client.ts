@@ -18,7 +18,7 @@ export class HttpClient {
   constructor(baseURL: string) {
     this.client = axios.create({
       baseURL,
-      timeout: 10000,
+      // timeout: 10000,
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -105,17 +105,20 @@ export class HttpClient {
   /**
    * Helper to validate data against a Zod schema.
    */
-  private validate<T extends z.ZodTypeAny>(schema: T, data: unknown): z.infer<T> {
+  private validate<T extends z.ZodTypeAny>(
+    schema: T,
+    data: unknown
+  ): z.infer<T> {
     const result = schema.safeParse(data);
-    
+
     if (!result.success) {
       // Flattening errors makes them much easier to read in logs
       const errorDetails = result.error.flatten();
       logger.error('Zod Validation Failed', { errors: errorDetails });
-      
+
       throw new AppError('Third-party API contract violation', 502);
     }
-    
+
     return result.data;
   }
 
@@ -194,7 +197,7 @@ export class HttpClient {
     };
   }
 
-    // public async get<T>(
+  // public async get<T>(
   //   url: string,
   //   config?: AxiosRequestConfig
   // ): Promise<RestAPIResponse<T>> {

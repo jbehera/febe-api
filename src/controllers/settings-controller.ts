@@ -1,14 +1,9 @@
 import { Request, Response } from 'express';
-import { FebeAPIConstants } from '../constants/api-constants';
-import { httpClient } from '../utils/http-client';
+import { getUserSettingsByQuery } from '../services/user-settings';
 
-async function getUserSettings(req: Request, res: Response) {
+export async function getUserSettings(req: Request, res: Response) {
   const settingsId = req.params.id;
-  const userSettingsResponse = await httpClient.get<any>(
-    `${FebeAPIConstants.GET_USER_SETTINGS}?query=ID:${settingsId}`,
-  );
+  const settings = await getUserSettingsByQuery(`ID:${settingsId}`);
 
-  return res.status(200).json(userSettingsResponse.data);
+  return res.status(200).json(settings);
 }
-
-export { getUserSettings };
