@@ -8,6 +8,7 @@ export const enum FebeAPIConstants {
   GET_USER_SETTINGS = '/userSetting',
   CREATE_USER_SETTINGS = '/userSetting',
 
+  GET_ORGANIZATIONS = '/organization',
   CREATE_ORGANIZATION = '/organization',
 
   CREATE_ENVIRONMENT = '/environment',

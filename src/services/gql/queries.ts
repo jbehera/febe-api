@@ -52,3 +52,100 @@ export const GET_USER_INFO = gql`
     }
   }
 `;
+
+export const GET_ORG_HIERARCHY = gql`
+  query GetOrgHirarchy($query: String, $token: String) {
+    organizations: findorganizationByQuery(
+      query: $query
+      start: "0"
+      rows: "9"
+      filterField: ""
+      filterQuery: ""
+      sort: ""
+      advanceField: ""
+      advanceQuery: ""
+      advance: "true"
+      token: $token
+    ) {
+      data {
+        id: ID
+        name
+        description
+        environments: findenvironmentByQuery(
+          query: "orgId:\${ID}"
+          start: "0"
+          rows: "9"
+          filterField: ""
+          filterQuery: ""
+          sort: ""
+          advanceField: ""
+          advanceQuery: ""
+          advance: "true"
+          token: $token
+        ) {
+          data {
+            id: ID
+            name
+            description
+          }
+          pagination {
+            total
+            limit
+            offset
+          }
+        }
+        subOrganizations: findsubOrganizationByQuery(
+          query: "orgId:\${ID}"
+          start: "0"
+          rows: "9"
+          filterField: ""
+          filterQuery: ""
+          sort: ""
+          advanceField: ""
+          advanceQuery: ""
+          advance: "true"
+          token: $token
+        ) {
+          data {
+            id: ID
+            name
+            description
+            environments: findenvironmentByQuery(
+              query: "subOrgId:\${ID}"
+              start: "0"
+              rows: "9"
+              filterField: ""
+              filterQuery: ""
+              sort: ""
+              advanceField: ""
+              advanceQuery: ""
+              advance: "true"
+              token: $token
+            ) {
+              data {
+                id: ID
+                name
+                description
+              }
+              pagination {
+                total
+                limit
+                offset
+              }
+            }
+          }
+          pagination {
+            total
+            limit
+            offset
+          }
+        }
+      }
+      pagination {
+        total
+        limit
+        offset
+      }
+    }
+  }
+`;

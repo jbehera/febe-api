@@ -1,11 +1,28 @@
 import { httpClient } from '../utils/http-client';
+import { graphqlClient } from '../utils/graphql-client';
 import { FebeAPIConstants } from '../constants';
 import {
   OrganizationCreateResponseSchema,
   OrganizationCreateSchema,
+  OrganizationGetResponseSchema,
   UserOrganizationCreateSchema,
   UserOrganizationCreateResponseSchema,
+  OrgHierarchyVariables,
+  OrgHierarchySchema,
 } from '../schemas';
+import { GET_ORG_HIERARCHY } from './gql/queries';
+
+export async function getOrganizationByQuery(query: string){
+  const response = await httpClient.get(
+    `${FebeAPIConstants.GET_ORGANIZATIONS}`,
+    OrganizationGetResponseSchema,
+    {
+      params: { query },
+    }
+  );
+
+  return response.data;
+}
 
 export async function createOrganization(
   organizationPayload: any,
@@ -50,4 +67,14 @@ export async function assignOrgUser(
   );
 
   return response.data;
+}
+
+export async function getOrgAndSubOrgWithEnvironments(variables: OrgHierarchyVariables) {
+  const result = await graphqlClient.execute(
+    GET_ORG_HIERARCHY,
+    OrgHierarchySchema,
+    variables
+  );
+
+  return result;
 }

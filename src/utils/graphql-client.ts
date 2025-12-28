@@ -1,92 +1,119 @@
-import { GraphQLClient, RequestDocument, Variables } from 'graphql-request';
-import { Request } from 'express'; // Or your specific framework types
+import { GraphQLClient, RequestMiddleware, ClientError } from 'graphql-request';
+import { z } from 'zod';
+import { logger } from './logger';
+import { AppError } from './app-error';
+import { getRequestContext } from '../context/request-context';
+import { RestAPIResponse } from '../schemas'; 
 
-/**
- * Interface for standard GraphQL Error responses
- */
-export interface GqlError {
-  message: string;
-  extensions?: Record<string, any>;
-}
-
-/**
- * Configuration options for the client
- */
-interface ClientConfig {
-  endpoint: string;
-  timeout?: number;
-}
-
-class GraphQLService {
+export class GraphqlClient {
   private client: GraphQLClient;
 
-  constructor(config: ClientConfig) {
-    this.client = new GraphQLClient(config.endpoint, {
-      errorPolicy: 'all',
-      // You can add global fetch options here (like timeouts)
+  constructor(endpoint: string) {
+    this.client = new GraphQLClient(endpoint, {
+      requestMiddleware: this.requestInterceptor,
     });
   }
 
   /**
-   * The core execution method.
-   * @template T The expected return type of the query
-   * @template V The type of the variables object
+   * Request Interceptor: Injects tokens, trace IDs, and logs outgoing queries.
    */
-  public async execute<T, V extends Variables = Variables>(
-    document: RequestDocument,
-    variables: V
-  ): Promise<T> {
-    
-    // 1. Context Extraction (Forwarding headers)
-    // const headers = this.extractHeaders(incomingReq);
-
-    try {
-      // 2. Execute with request-specific headers
-      // Note: request() headers override instance headers, ensuring isolation
-      // return await this.client.request<T>(document, variables, headers);
-      return await this.client.request<T>(document, variables);
-    } catch (error: any) {
-      this.handleErrors(error);
-      throw error;
-    }
-  }
-
-  /**
-   * Private helper to safely extract and map headers
-   */
-  private extractHeaders(req: Request): Record<string, string> {
+  private requestInterceptor: RequestMiddleware = async (request) => {
+    const context = getRequestContext();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // Forward Authorization
-    if (req.headers.authorization) {
-      headers['Authorization'] = req.headers.authorization;
+    if (context) {
+      if (context.token) {
+        headers['Authorization'] = `Bearer ${context.token}`;
+      }
+      if (context.traceId) {
+        headers['x-request-id'] = context.traceId;
+      }
     }
 
-    // Forward Correlation/Trace IDs for observability
-    if (req.headers['x-request-id']) {
-      headers['x-request-id'] = req.headers['x-request-id'] as string;
+    logger.info(`Outgoing GraphQL Request: ${request.operationName || 'Unnamed Operation'}`);
+
+    return {
+      ...request,
+      headers: { ...request.headers, ...headers },
+    };
+  };
+
+  /**
+   * Validates and transforms the GraphQL response using Zod.
+   */
+  private validate<T extends z.ZodTypeAny>(
+    schema: T,
+    data: unknown
+  ): z.infer<T> {
+    const result = schema.safeParse(data);
+
+    if (!result.success) {
+      const errorDetails = result.error.flatten();
+      logger.error('GraphQL Zod Validation Failed', { errors: errorDetails });
+      throw new AppError('GraphQL service contract violation', 502);
     }
 
-    return headers;
+    return result.data;
   }
 
   /**
-   * Centralized error logging and normalization
+   * Normalizes GraphQL errors into your standard AppError format.
    */
-  private handleErrors(error: any): void {
-    const gqlErrors = error.response?.errors as GqlError[] | undefined;
-    
-    if (gqlErrors) {
-      console.error(`[GQL Service Error]: ${gqlErrors.map(e => e.message).join(', ')}`);
-    } else {
-      console.error(`[Network Error]: ${error.message}`);
+  private handleClientError(error: any): never {
+    const context = getRequestContext();
+    let statusCode = 500;
+    let message = 'GraphQL Request Failed';
+
+    if (error instanceof ClientError) {
+      statusCode = error.response.status || 400;
+      // Extract the first error message from the GraphQL errors array
+      message = error.response.errors?.[0]?.message || error.message;
+    }
+
+    logger.error(`[${context?.traceId}] GraphQL API Failure: ${statusCode} - ${message}`, {
+      errorDetails: error instanceof ClientError ? error.response.errors : error,
+    });
+
+    // Throwing to match your REST client's rejection behavior
+    throw {
+      status: statusCode,
+      message: message,
+      data: null,
+    } as RestAPIResponse<any>;
+  }
+
+  /**
+   * The core execution method.
+   * @param query - The GraphQL document (string or AST)
+   * @param schema - Zod schema for validation and transformation
+   * @param variables - Query variables
+   */
+  public async execute<T extends z.ZodTypeAny, V extends Record<string, any> = {}>(
+    query: string,
+    schema: T,
+    variables?: V
+  ): Promise<RestAPIResponse<z.infer<T>>> {
+    try {
+      const data = await this.client.request<z.infer<T>>(query, variables);
+      
+      const context = getRequestContext();
+      logger.info(`[${context?.traceId}] GraphQL API Success`);
+
+      const validatedData = this.validate(schema, data);
+
+      return {
+        status: 200,
+        message: 'Success',
+        data: validatedData,
+      };
+    } catch (error) {
+      return this.handleClientError(error);
     }
   }
 }
 
-// Export a pre-configured instance (The "Singleton")
-export const graphqlClient = new GraphQLService({
-  endpoint: process.env.FEBE_GRAPHQL_API_URL || '',
-});
+export const graphqlClient = new GraphqlClient(
+  process.env.FEBE_GRAPHQL_API_URL || ''
+);
