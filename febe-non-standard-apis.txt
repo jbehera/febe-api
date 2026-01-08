@@ -1,0 +1,82 @@
+post - create user settings:
+{
+    "responseMessage": "UserSetting created successfully",
+    "statusCode": 201,
+    "response": {
+        "orgId": "572dc99b-b84a-48a9-a792-b87036ff6778",
+        "environmentId": "b1ae4ff8-1c55-4fcd-a9de-084d94dbf708",
+        "userId": "44d92735-3415-41fe-b9b0-1ad24b25c3e7",
+        "createdAt": "2025-12-25T18:01:47.946827541Z",
+        "updatedAt": "2025-12-25T18:01:47.946827541Z",
+        "ID": "1c7303c0-b031-47d7-94ba-84adfef29c95"
+    }
+}
+
+post - signup
+http response status is 200, but response body is:
+{
+    "data": {
+        "responseMessage": "Unexpected error",
+        "responseType": "error",
+        "statusCode": 500
+    }
+}
+
+Error formats:
+status: 401
+{
+    "Message": {
+        "responseMessage": "User / password incorrect",
+        "responseType": "UNAUTHORIZED",
+        "statusCode": 401
+    }
+}
+
+status: 500
+{
+    "responseMessage": "Internal Server Error. Please try again later.",
+    "responseType": "error",
+    "statusCode": 500
+}
+
+status: 401
+no error response
+
+status: 400 (validate method from express-zod-safe or zod schema validation errors)
+[
+    {
+        "type": "body",
+        "errors": [
+            {
+                "origin": "string",
+                "code": "invalid_format",
+                "format": "email",
+                "pattern": "/^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$/",
+                "path": [
+                    "username"
+                ],
+                "message": "Invalid email address"
+            },
+            {
+                "origin": "string",
+                "code": "too_small",
+                "minimum": 8,
+                "inclusive": true,
+                "path": [
+                    "password"
+                ],
+                "message": "Too small: expected string to have >=8 characters"
+            }
+        ]
+    }
+]
+
+Can you please convert any sort of such errors to be converted to a standard error format as follows:
+{
+    errors: [
+        {
+            message: "error message",
+            field?: ""
+        }
+    ]
+}

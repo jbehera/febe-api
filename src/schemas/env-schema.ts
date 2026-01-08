@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const EnvironmentSchema = z.object({
   id: z.uuid(),
-  orgId: z.uuid(),
+  orgId: z.uuid().nullable().optional(),
   subOrgId: z.uuid().nullable().optional(),
   name: z.string().min(1).max(100),
   description: z.string().max(255).optional(),

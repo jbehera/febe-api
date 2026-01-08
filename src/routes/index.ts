@@ -8,7 +8,7 @@ import { orgRoutes } from "./organization";
 
 router.use('/auth', authRoutes);
 router.use('/settings', settingsRoutes);
-router.use('/organizations', orgRoutes);
+router.use('/organization', orgRoutes);
 
 
 export { router as apiRoutes };

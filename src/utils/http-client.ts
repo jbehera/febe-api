@@ -51,53 +51,51 @@ export class HttpClient {
       (error: AxiosError) => Promise.reject(error)
     );
 
-    // 2. Response Interceptor: Error Handling & Data Extraction
     this.client.interceptors.response.use(
-      // SUCCESS HANDLER
       (response: AxiosResponse): AxiosResponse => {
         const context = getRequestContext();
-        // Log success, but return the original response object
         logger.info(
           `[${context?.traceId}] External API Success: ${response.status} ${response.config.url}`
         );
         return response;
       },
 
-      // ERROR HANDLER
+      // ERROR HANDLER (Updated for Centralized Middleware)
       (error: AxiosError): Promise<never> => {
         const context = getRequestContext();
 
-        // --- Normalization Logic for Failure ---
+        // 1. Determine the Status Code
         let statusCode = error.response?.status || 500;
-        let errorMessage = 'Request failed (Unknown)';
-        let responseData = error.response?.data;
 
+        // 2. Capture the Raw Response Data
+        // This is the "Message" or "responseMessage" object from the external API
+        const responseData = error.response?.data;
+
+        // 3. Handle specific Network/Timeout errors
+        let fallbackMessage = 'Request failed (Unknown)';
         if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-          statusCode = 504; // Gateway Timeout
-          errorMessage = 'External API took too long to respond.';
-        } else if (error.response) {
-          // Server responded with an error status (4xx, 5xx)
-          const extMessage = this.extractExternalErrorMessage(responseData);
-          errorMessage =
-            extMessage || error.response.statusText || errorMessage;
-        } else if (error.request) {
-          // Request was made but no response received (network issue)
-          statusCode = 503; // Service Unavailable
-          errorMessage = 'No response from external service.';
+          statusCode = 504;
+          fallbackMessage = 'External API took too long to respond.';
+        } else if (error.request && !error.response) {
+          statusCode = 503;
+          fallbackMessage = 'No response from external service.';
         }
 
-        // Log the failure with trace ID
+        // 4. Log the failure internally with trace ID
         logger.error(
-          `[${context?.traceId}] External API Failure: ${statusCode} - ${errorMessage}`,
-          { errorDetails: responseData }
+          `[${context?.traceId}] External API Failure: ${statusCode}`,
+          { errorDetails: responseData || error.message }
         );
 
-        // Reject the Promise with a normalized error object
+        /**
+         * Reject with an object that matches the "err" argument
+         * expected by the errorMiddleware.
+         */
         return Promise.reject({
-          status: statusCode,
-          message: errorMessage,
-          data: null,
-        } as RestAPIResponse<any>) as Promise<never>;
+          statusCode: statusCode, 
+          data: responseData, 
+          message: fallbackMessage,
+        }) as Promise<never>;
       }
     );
   }
@@ -112,7 +110,6 @@ export class HttpClient {
     const result = schema.safeParse(data);
 
     if (!result.success) {
-      // Flattening errors makes them much easier to read in logs
       const errorDetails = result.error.flatten();
       logger.error('Zod Validation Failed', { errors: errorDetails });
 
@@ -120,19 +117,6 @@ export class HttpClient {
     }
 
     return result.data;
-  }
-
-  private extractExternalErrorMessage(responseData: any): string | null {
-    // Check for the non-standard failure format you provided:
-    // { "Message": { "responseMessage": "User / password incorrect" } }
-    if (responseData?.Message?.responseMessage) {
-      return responseData.Message.responseMessage;
-    }
-    // Check for common error formats (e.g., Axios default)
-    if (typeof responseData?.error === 'string') {
-      return responseData.error;
-    }
-    return null;
   }
 
   public async get<T extends z.ZodTypeAny>(
@@ -196,56 +180,6 @@ export class HttpClient {
       data: validatedData,
     };
   }
-
-  // public async get<T>(
-  //   url: string,
-  //   config?: AxiosRequestConfig
-  // ): Promise<RestAPIResponse<T>> {
-  //   const response = await this.client.get<T>(url, config);
-  //   return {
-  //     status: response.status,
-  //     message: response.statusText || 'Success',
-  //     data: response.data,
-  //   };
-  // }
-
-  // public async post<T, D = unknown>(
-  //   url: string,
-  //   data: D,
-  //   config?: AxiosRequestConfig
-  // ): Promise<RestAPIResponse<T>> {
-  //   const response = await this.client.post<T>(url, data, config);
-  //   return {
-  //     status: response.status,
-  //     message: response.statusText || 'Success',
-  //     data: response.data,
-  //   };
-  // }
-
-  // public async put<T, D = unknown>(
-  //   url: string,
-  //   data: D,
-  //   config?: AxiosRequestConfig
-  // ): Promise<RestAPIResponse<T>> {
-  //   const response = await this.client.put<T>(url, data, config);
-  //   return {
-  //     status: response.status,
-  //     message: response.statusText || 'Success',
-  //     data: response.data,
-  //   };
-  // }
-
-  // public async delete<T>(
-  //   url: string,
-  //   config?: AxiosRequestConfig
-  // ): Promise<RestAPIResponse<T>> {
-  //   const response = await this.client.delete<T>(url, config);
-  //   return {
-  //     status: response.status,
-  //     message: response.statusText || 'Success',
-  //     data: response?.data,
-  //   };
-  // }
 }
 
 export const httpClient = new HttpClient(

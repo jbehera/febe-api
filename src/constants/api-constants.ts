@@ -4,6 +4,7 @@ export const enum FebeAPIConstants {
   ACTIVATE_USER = '/activate-user-new',
 
   GET_USER = '/user',
+  GET_CURRENT_USER = '/me',
 
   GET_USER_SETTINGS = '/userSetting',
   CREATE_USER_SETTINGS = '/userSetting',

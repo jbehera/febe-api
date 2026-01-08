@@ -54,7 +54,7 @@ export const GET_USER_INFO = gql`
 `;
 
 export const GET_ORG_HIERARCHY = gql`
-  query GetOrgHirarchy($query: String, $token: String) {
+  query GetOrgHirarchy($query: String) {
     organizations: findorganizationByQuery(
       query: $query
       start: "0"
@@ -65,7 +65,6 @@ export const GET_ORG_HIERARCHY = gql`
       advanceField: ""
       advanceQuery: ""
       advance: "true"
-      token: $token
     ) {
       data {
         id: ID
@@ -81,10 +80,11 @@ export const GET_ORG_HIERARCHY = gql`
           advanceField: ""
           advanceQuery: ""
           advance: "true"
-          token: $token
         ) {
           data {
             id: ID
+            orgId
+            subOrgId
             name
             description
           }
@@ -104,7 +104,6 @@ export const GET_ORG_HIERARCHY = gql`
           advanceField: ""
           advanceQuery: ""
           advance: "true"
-          token: $token
         ) {
           data {
             id: ID
@@ -120,10 +119,11 @@ export const GET_ORG_HIERARCHY = gql`
               advanceField: ""
               advanceQuery: ""
               advance: "true"
-              token: $token
             ) {
               data {
                 id: ID
+                orgId
+                subOrgId
                 name
                 description
               }

@@ -10,8 +10,7 @@ export async function getOrgHierarchy(req: Request, res: Response) {
   const settingsId = req.params.settingsId;
   const settings = await getUserSettingsByQuery(`ID:${settingsId}`);
   const orgHierarchy = await getOrgAndSubOrgWithEnvironments({
-    query: `ID:${settings?.orgId}`,
-    token: req.headers.authorization?.split(' ')[1],
+    query: `ID:${settings?.orgId}`
   });
 
   return res.status(200).json(orgHierarchy);

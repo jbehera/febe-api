@@ -74,6 +74,20 @@ export const UserGetSchema = z
     };
   });
 
+export const CurrentUserGetSchema = z
+  .object({
+    data: z.object({
+      email: z.email(),
+      ID: z.string()
+    })
+  }).transform((val) => {
+    return {
+      email: val.data.email,
+      id: val.data.ID
+    }
+  })
+
+
 // TypeScript type inference
 export type SignInResponse = z.infer<typeof SignInResponseSchema>;
 

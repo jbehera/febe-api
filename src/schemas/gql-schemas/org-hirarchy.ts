@@ -27,5 +27,4 @@ export type OrgHierarchyResponse = z.infer<typeof OrgHierarchySchema>;
 
 export interface OrgHierarchyVariables {
   query: string;
-  token?: string;
 }

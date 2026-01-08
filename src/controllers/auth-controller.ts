@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import {
   activateNewUser,
+  getCurrentUserByJWT,
   getUserById,
   signInUser,
   signUpUser,
@@ -128,4 +129,9 @@ export async function activateUser(req: Request, res: Response) {
   const activationResponse = await activateNewUser(payload.userActivationKey);
 
   return res.status(200).json(activationResponse);
+}
+
+export async function currentUser(req: Request, res: Response) {
+  const currentUserResponse = await getCurrentUserByJWT();
+  return res.status(200).json(currentUserResponse);
 }

@@ -70,11 +70,11 @@ export async function assignOrgUser(
 }
 
 export async function getOrgAndSubOrgWithEnvironments(variables: OrgHierarchyVariables) {
-  const result = await graphqlClient.execute(
+  const response = await graphqlClient.execute(
     GET_ORG_HIERARCHY,
     OrgHierarchySchema,
     variables
   );
 
-  return result;
+  return response.data;
 }

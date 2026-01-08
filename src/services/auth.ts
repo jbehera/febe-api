@@ -2,6 +2,7 @@ import { httpClient } from '../utils/http-client';
 import {
   ActivationRequestSchema,
   ActivationResponseSchema,
+  CurrentUserGetSchema,
   SignInRequestSchema,
   SignInResponseSchema,
   SignUpRequestSchema,
@@ -59,6 +60,16 @@ export async function getUserById(userId: string, token?: string) {
       headers,
       params: { query: `ID:${userId}` },
     }
+  );
+
+  return response.data;
+}
+
+export async function getCurrentUserByJWT() {
+  
+  const response = await httpClient.get(
+    FebeAPIConstants.GET_CURRENT_USER,
+    CurrentUserGetSchema,
   );
 
   return response.data;

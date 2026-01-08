@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { logger } from './logger';
 import { AppError } from './app-error';
 import { getRequestContext } from '../context/request-context';
-import { RestAPIResponse } from '../schemas'; 
+import { RestAPIResponse } from '../schemas';
 
 export class GraphqlClient {
   private client: GraphQLClient;
@@ -32,7 +32,11 @@ export class GraphqlClient {
       }
     }
 
-    logger.info(`Outgoing GraphQL Request: ${request.operationName || 'Unnamed Operation'}`);
+    logger.info(
+      `Outgoing GraphQL Request: ${
+        request.operationName || 'Unnamed Operation'
+      }`
+    );
 
     return {
       ...request,
@@ -50,9 +54,15 @@ export class GraphqlClient {
     const result = schema.safeParse(data);
 
     if (!result.success) {
+      console.error('--- ZOD VALIDATION ERROR DETAILS ---');
+      console.error(JSON.stringify(result.error.format(), null, 2));
+
       const errorDetails = result.error.flatten();
-      logger.error('GraphQL Zod Validation Failed', { errors: errorDetails });
-      throw new AppError('GraphQL service contract violation', 502);
+      logger.error('Third-party API contract violation', {
+        errors: errorDetails,
+      });
+
+      throw new AppError('Third-party API contract violation', 502);
     }
 
     return result.data;
@@ -72,9 +82,13 @@ export class GraphqlClient {
       message = error.response.errors?.[0]?.message || error.message;
     }
 
-    logger.error(`[${context?.traceId}] GraphQL API Failure: ${statusCode} - ${message}`, {
-      errorDetails: error instanceof ClientError ? error.response.errors : error,
-    });
+    logger.error(
+      `[${context?.traceId}] GraphQL API Failure: ${statusCode} - ${message}`,
+      {
+        errorDetails:
+          error instanceof ClientError ? error.response.errors : error,
+      }
+    );
 
     // Throwing to match your REST client's rejection behavior
     throw {
@@ -90,14 +104,17 @@ export class GraphqlClient {
    * @param schema - Zod schema for validation and transformation
    * @param variables - Query variables
    */
-  public async execute<T extends z.ZodTypeAny, V extends Record<string, any> = {}>(
+  public async execute<
+    T extends z.ZodTypeAny,
+    V extends Record<string, any> = {}
+  >(
     query: string,
     schema: T,
     variables?: V
   ): Promise<RestAPIResponse<z.infer<T>>> {
     try {
       const data = await this.client.request<z.infer<T>>(query, variables);
-      
+
       const context = getRequestContext();
       logger.info(`[${context?.traceId}] GraphQL API Success`);
 
