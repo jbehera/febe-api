@@ -9,10 +9,11 @@ import {
   UserOrganizationCreateResponseSchema,
   OrgHierarchyVariables,
   OrgHierarchySchema,
+  OrganizationUpdatePayload
 } from '../schemas';
 import { GET_ORG_HIERARCHY } from './gql/queries';
 
-export async function getOrganizationByQuery(query: string){
+export async function getOrganizationByQuery(query: string) {
   const response = await httpClient.get(
     `${FebeAPIConstants.GET_ORGANIZATIONS}`,
     OrganizationGetResponseSchema,
@@ -69,11 +70,25 @@ export async function assignOrgUser(
   return response.data;
 }
 
-export async function getOrgAndSubOrgWithEnvironments(variables: OrgHierarchyVariables) {
+export async function getOrgAndSubOrgWithEnvironments(
+  variables: OrgHierarchyVariables
+) {
   const response = await graphqlClient.execute(
     GET_ORG_HIERARCHY,
     OrgHierarchySchema,
     variables
+  );
+
+  return response.data;
+}
+
+export async function updateOrg(
+  payload: OrganizationUpdatePayload
+) {
+  const response = await httpClient.put(
+    FebeAPIConstants.UPDATE_ORGANIZATION,
+    payload,
+    OrganizationCreateResponseSchema,
   );
 
   return response.data;

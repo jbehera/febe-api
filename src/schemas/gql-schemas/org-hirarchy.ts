@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { GqlCollection } from '../common-schema';
-import { EnvironmentSchema } from '../env-schema';
+import { Env } from '../env-schema';
 
 export const OrgHierarchySchema = z.object({
   organizations: GqlCollection(
@@ -8,14 +8,14 @@ export const OrgHierarchySchema = z.object({
       id: z.string(),
       name: z.string(),
       description: z.string().nullable().optional(),
-      environments: GqlCollection(EnvironmentSchema),
+      environments: GqlCollection(Env.Base),
       subOrganizations: GqlCollection(
         z.object({
           id: z.string(),
           orgId: z.string(),
           name: z.string(),
           description: z.string().nullable().optional(),
-          environments: GqlCollection(EnvironmentSchema),
+          environments: GqlCollection(Env.Base),
         })
       ),
     })

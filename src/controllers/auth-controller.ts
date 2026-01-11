@@ -13,8 +13,9 @@ import {
   getUserSettingsByQuery,
 } from '../services/user-settings';
 import { assignOrgUser, createOrganization } from '../services/organization';
-import { createEnvironment } from '../services/environment';
+import { environmentService } from '../services/environment';
 import { FebeEmailTemplates } from '../constants';
+import { EnvCreateReq } from '../schemas';
 
 export async function signIn(req: Request, res: Response) {
   const { username, password } = req.body;
@@ -49,15 +50,14 @@ export async function signIn(req: Request, res: Response) {
 
     await assignOrgUser(org.id, user?.id!, token);
 
-    const envResponse = await createEnvironment(
-      {
-        name: 'Sandbox',
-        description: 'Sandbox',
-        orgId: org.id,
-        subOrgId: null,
-      },
-      token
-    );
+    const newEnv: EnvCreateReq = {
+      name: 'Sandbox',
+      description: 'Sandbox',
+      orgId: org.id,
+      subOrgId: null,
+    };
+
+    const envResponse = await environmentService.create(newEnv, token);
 
     const settingsPayload = {
       userId: user?.id!,

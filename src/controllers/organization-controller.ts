@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import {
   getOrgAndSubOrgWithEnvironments,
+  updateOrg,
 } from '../services/organization';
 import { getUserSettingsByQuery } from '../services/user-settings';
 
@@ -14,4 +15,9 @@ export async function getOrgHierarchy(req: Request, res: Response) {
   });
 
   return res.status(200).json(orgHierarchy);
+}
+
+export async function updateOrganization(req: Request, res: Response) {
+  const response = await updateOrg(req.body);
+  return res.status(200).json(response);
 }

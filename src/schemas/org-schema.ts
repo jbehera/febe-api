@@ -6,6 +6,18 @@ export const OrganizationSchema = z.object({
   description: z.string().max(255).optional(),
 });
 
+export const OrganizationUpdateSchema = z
+  .object({
+    id: z.uuid(),
+    name: z.string().min(1).max(100),
+    description: z.string().max(255).optional(),
+  })
+  .transform((data) => ({
+    ID: data.id,
+    name: data.name,
+    description: data.description,
+  }));
+
 export const OrganizationCreateSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(255).optional(),
@@ -16,9 +28,7 @@ export const OrganizationGetResponseSchema = z
     pagination: z.object({
       total: z.number(),
     }),
-    data: z.array(
-      OrganizationSchema
-    ),
+    data: z.array(OrganizationSchema),
   })
   .transform((val) => {
     const rawSetting = val.data[0];
@@ -32,16 +42,19 @@ export const OrganizationGetResponseSchema = z
     };
   });
 
-export const OrganizationCreateResponseSchema = z.object({
-  response: z.object({
-    ID: z.uuid(),
-    name: z.string(),
-    description: z.string().nullable().optional(),
-  }),
-}).transform((raw) => ({
-  id: raw.response.ID,
-  name: raw.response.name,
-  description: raw.response.description || undefined,
-}));
+export const OrganizationCreateResponseSchema = z
+  .object({
+    response: z.object({
+      ID: z.uuid(),
+      name: z.string(),
+      description: z.string().nullable().optional(),
+    }),
+  })
+  .transform((raw) => ({
+    id: raw.response.ID,
+    name: raw.response.name,
+    description: raw.response.description || undefined,
+  }));
 
 export type Organization = z.infer<typeof OrganizationSchema>;
+export type OrganizationUpdatePayload = z.output<typeof OrganizationUpdateSchema>;
