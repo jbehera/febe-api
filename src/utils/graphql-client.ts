@@ -82,6 +82,11 @@ export class GraphqlClient {
       message = error.response.errors?.[0]?.message || error.message;
     }
 
+    if(error instanceof AppError) {
+      statusCode = error.statusCode;
+      message = error.message;
+    }
+
     logger.error(
       `[${context?.traceId}] GraphQL API Failure: ${statusCode} - ${message}`,
       {
@@ -118,12 +123,12 @@ export class GraphqlClient {
       const context = getRequestContext();
       logger.info(`[${context?.traceId}] GraphQL API Success`);
 
-      const validatedData = this.validate(schema, data);
+      // const validatedData = this.validate(schema, data);
 
       return {
         status: 200,
         message: 'Success',
-        data: validatedData,
+        data: data,
       };
     } catch (error) {
       return this.handleClientError(error);

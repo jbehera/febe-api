@@ -6,7 +6,7 @@ import {
   addSubOrg,
   updateSubOrg,
   deleteSubOrg,
-} from '../controllers/sub-organization-controller';
+} from '../controllers/sub-org-controller';
 
 const router = Router();
 

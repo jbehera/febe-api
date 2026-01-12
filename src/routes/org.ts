@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import express from 'express';
 import validate from 'express-zod-safe';
-import { getOrgHierarchy, updateOrganization } from '../controllers/organization-controller';
+import { getOrgHierarchy, updateOrganization } from '../controllers/org-controller';
 import { OrganizationUpdateSchema } from '../schemas';
 
 const router = express.Router();

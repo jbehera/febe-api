@@ -6,7 +6,7 @@ import {
   addEnvironment,
   updateEnvironment,
   deleteEnvironment,
-} from '../controllers/environment-controller';
+} from '../controllers/env-controller';
 
 const router = Router();
 

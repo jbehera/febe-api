@@ -3,9 +3,9 @@ const router = express.Router();
 
 import { authRoutes } from "./auth";
 import { settingsRoutes } from "./user-settings";
-import { orgRoutes } from "./organization";
-import { environmentRoutes } from "./environment";
-import { subOrgRoutes } from './sub-organization';
+import { orgRoutes } from "./org";
+import { environmentRoutes } from "./env";
+import { subOrgRoutes } from './sub-org';
 
 
 router.use('/auth', authRoutes);
