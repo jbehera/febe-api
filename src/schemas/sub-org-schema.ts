@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { IdSchema } from './common-schema';
 
 const coreFields = {
-  orgId: z.uuid(),
+  orgId: IdSchema,
   name: z.string().min(1).max(100),
   description: z.string().max(255).optional(),
 };
@@ -12,7 +13,7 @@ export const SubOrg = {
 
   // Input for PUT (Transforms id -> ID for third-party API)
   Update: z.object({
-    id: z.uuid(),
+    id: IdSchema,
     ...coreFields,
   }).transform(({ id, ...rest }) => ({
     ID: id,
@@ -22,8 +23,8 @@ export const SubOrg = {
   // Response mapping for Single Item (Transforms ID -> id back for internal use)
   ItemRes: z.object({
     response: z.object({
-      ID: z.uuid(),
-      orgId: z.uuid(),
+      ID: IdSchema,
+      orgId: IdSchema.nullish(),
       name: z.string(),
       description: z.string().nullable().optional(),
     }),

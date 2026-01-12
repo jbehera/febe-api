@@ -109,6 +109,7 @@ export const GET_ORG_HIERARCHY = gql`
             id: ID
             name
             description
+            orgId
             environments: findenvironmentByQuery(
               query: "subOrgId:\${ID}"
               start: "0"

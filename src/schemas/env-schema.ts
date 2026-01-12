@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { IdSchema } from './common-schema';
 
 /**
  * Common fields used to maintain DRY (Don't Repeat Yourself)
  */
 const coreFields = {
-  orgId: z.uuid(),
-  subOrgId: z.uuid().nullable().optional(),
+  orgId: IdSchema,
+  subOrgId: IdSchema.nullish(),
   name: z.string().min(1).max(100),
   description: z.string().max(255).optional(),
 };
@@ -13,7 +14,7 @@ const coreFields = {
 export const Env = {
   // The base object for internal use
   Base: z.object({
-    id: z.uuid(),
+    id: IdSchema,
     ...coreFields,
   }),
 
@@ -21,7 +22,7 @@ export const Env = {
   Create: z.object(coreFields),
 
   Update: z.object({
-    id: z.uuid(),
+    id: IdSchema,
     ...coreFields,
   }).transform(({ id, ...rest }) => ({
     ID: id, // Transform to third-party format
@@ -32,9 +33,9 @@ export const Env = {
   // Standardizing names to 'Res' or 'Item'
   ItemRes: z.object({
     response: z.object({
-      ID: z.uuid(),
-      orgId: z.uuid(),
-      subOrgId: z.uuid().nullable().optional(),
+      ID: IdSchema,
+      orgId: IdSchema.nullish(),
+      subOrgId: IdSchema.nullish(),
       name: z.string(),
       description: z.string().nullable().optional(),
     }),

@@ -15,6 +15,8 @@ const PaginationSchema = z.object({
   offset: z.coerce.number(),
 });
 
+export const IdSchema = z.uuid();
+
 export const GqlCollection = <T extends z.ZodTypeAny>(dataSchema: T) => 
   z.object({
     data: z.array(dataSchema),
