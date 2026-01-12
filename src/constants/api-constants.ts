@@ -24,4 +24,5 @@ export const enum FebeAPIConstants {
 
   CREATE_USER_ORG_MAPPING = '/userOrg',
   
+  PROJECT_BASE = '/project',
 }

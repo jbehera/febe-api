@@ -110,7 +110,7 @@ export class HttpClient {
     const result = schema.safeParse(data);
 
     if (!result.success) {
-      const errorDetails = result.error.flatten();
+      const errorDetails = z.treeifyError(result.error);
       logger.error('Zod Validation Failed', { errors: errorDetails });
 
       throw new AppError('Third-party API contract violation', 502);
