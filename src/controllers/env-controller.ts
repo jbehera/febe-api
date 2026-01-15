@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { environmentService } from '../services/environment';
+import { environmentService } from '../services/env-service';
 
 export async function addEnvironment(req: Request, res: Response) {
   const data = await environmentService.create(req.body);

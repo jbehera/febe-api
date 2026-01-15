@@ -9,13 +9,22 @@ export interface RestAPIResponse<T> {
   data: T;
 }
 
-const PaginationSchema = z.object({
+export const PaginationSchema = z.object({
   total: z.number(),
   limit: z.coerce.number(),
   offset: z.coerce.number(),
 });
 
 export const IdSchema = z.uuid();
+
+/**
+ * Shared metadata fields for resources
+ */
+export const ResourceMetadata = {
+  createdBy: z.string().optional(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+};
 
 export const GqlCollection = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
@@ -28,3 +37,4 @@ export const PaginatedCollection = <T extends z.ZodTypeAny>(itemSchema: T) =>
     pagination: PaginationSchema,
     data: z.array(itemSchema),
   });
+  

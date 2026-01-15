@@ -7,16 +7,16 @@ import {
   addProject,
   updateProject,
   deleteProject,
+  getProjectsWithVersions,
+  getProjectById,
 } from '../controllers/project-controller';
+import { IdSchema } from '../schemas';
 
 const router = Router();
 
-// GET all projects
-router.get(
-  '/:envId',
-  validate({ params: z.object({ envId: z.uuid() }) }),
-  getProjects
-);
+router.get('/', validate({query: Project.List}), getProjects);
+router.get('/hierarchy', validate({ query: Project.List }), getProjectsWithVersions);
+router.get('/:id', validate({ params: { id: IdSchema }}), getProjectById);
 
 // POST create project
 router.post('/', validate({ body: Project.Create }), addProject);

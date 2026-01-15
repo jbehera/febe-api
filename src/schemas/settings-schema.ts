@@ -1,53 +1,68 @@
 import { z } from 'zod';
+import { IdSchema, PaginatedCollection, ResourceMetadata } from './common-schema';
 
-export const SettingsGetSchema = z
-  .object({
-    pagination: z.object({
-      total: z.number(),
+/**
+ * Abstracted core fields for UserSettings
+ */
+export const UserSettingCore = {
+  orgId: IdSchema,
+  subOrgId: IdSchema.nullish(),
+  environmentId: IdSchema,
+  userId: IdSchema, // Mapping to the userId varchar
+};
+
+export const UserSetting = {
+  // Response mapping for a single item (ID -> id)
+  ListItemRes: z.object({
+    response: z.object({
+      ID: IdSchema,
+      ...UserSettingCore
     }),
-    data: z.array(
-      z.object({
-        ID: z.uuid(),
-        userId: z.uuid(),
-        orgId: z.uuid(),
-        subOrgId: z.uuid().nullable().optional(),
-        environmentId: z.uuid(),
-      })
-    ),
-  })
-  .transform((val) => {
-    const rawSetting = val.data[0];
-    if (!rawSetting) {
-      return null;
-    }
-    return {
-      id: rawSetting.ID,
-      userId: rawSetting.userId,
-      orgId: rawSetting.orgId,
-      subOrgId: rawSetting?.subOrgId || null,
-      environmentId: rawSetting.environmentId,
-    };
-  });
+  }).transform((raw) => ({
+    id: raw.response.ID,
+    ...raw.response,
+    ID: undefined,
+  })),
 
-export const SettingsCreateSchema = z.object({
-  userId: z.uuid(),
-  orgId: z.uuid(),
-  subOrgId: z.uuid().nullable().optional(),
-  environmentId: z.uuid(),
-});
+  // Paginated List Response
+  ListRes: PaginatedCollection(
+    z.object({
+      ID: IdSchema,
+      ...UserSettingCore,
+    }).transform(({ ID, ...rest }) => ({
+      id: ID,
+      ...rest,
+    }))
+  ),
 
-export const SettingsCreateResponseSchema = z.object({
-  response: z.object({
-    ID: z.uuid(),
-    userId: z.uuid(),
-    orgId: z.uuid(),
-    subOrgId: z.uuid().nullable().optional(),
-    environmentId: z.uuid(),
+  // Input for GET Query Parameters
+  List: z.object({
+    userId: z.string().optional(),
+    envId: IdSchema.optional(),
+    rows: z.coerce.number().int().min(1).default(10),
+    start: z.coerce.number().int().min(0).default(0),
   }),
-}).transform((raw) => ({
-  id: raw.response.ID,
-  userId: raw.response.userId,
-  orgId: raw.response.orgId,
-  subOrgId: raw.response.subOrgId,
-  environmentId: raw.response.environmentId,
-}));
+
+  // Input for POST (Create)
+  Create: z.object(UserSettingCore),
+
+  // Input for PUT (Update)
+  Update: z.object({
+    id: IdSchema,
+    ...UserSettingCore,
+  }).transform(({ id, ...rest }) => ({
+    ID: id,
+    ...rest,
+  })),
+
+  // Standard Delete Response
+  DeleteRes: z.object({
+    responseMessage: z.string(),
+  }).transform(data => ({
+    message: data.responseMessage
+  })),
+};
+
+export type UserSettingListReq = z.infer<typeof UserSetting.List>;
+export type UserSettingCreateReq = z.infer<typeof UserSetting.Create>;
+export type UserSettingUpdateReq = z.output<typeof UserSetting.Update>;

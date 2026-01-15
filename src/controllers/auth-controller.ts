@@ -5,15 +5,14 @@ import {
   getUserById,
   signInUser,
   signUpUser,
-} from '../services/auth';
+} from '../services/auth-service';
 import { enqueueEmail } from '../services/email/email-queue';
 import { base64Encode } from '../utils/common';
 import {
-  createUserSettings,
-  getUserSettingsByQuery,
-} from '../services/user-settings';
-import { assignOrgUser, createOrganization } from '../services/organization';
-import { environmentService } from '../services/environment';
+  userSettingService
+} from '../services/user-settings-service';
+import { assignOrgUser, createOrganization } from '../services/org-service';
+import { environmentService } from '../services/env-service';
 import { FebeEmailTemplates } from '../constants';
 import { EnvCreateReq } from '../schemas';
 
@@ -33,7 +32,7 @@ export async function signIn(req: Request, res: Response) {
     user.lastName = febeUser.lastName;
   }
 
-  const existingSettings = await getUserSettingsByQuery(
+  const existingSettings = await userSettingService.getByQuery(
     `userId:${user?.id}`,
     token
   );
@@ -66,7 +65,7 @@ export async function signIn(req: Request, res: Response) {
       environmentId: envResponse.id,
     };
 
-    const userSettings = await createUserSettings(settingsPayload, token);
+    const userSettings = await userSettingService.create(settingsPayload, token);
     settingsId = userSettings.id;
   }
 

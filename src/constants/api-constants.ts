@@ -6,8 +6,7 @@ export const enum FebeAPIConstants {
   GET_USER = '/user',
   GET_CURRENT_USER = '/me',
 
-  GET_USER_SETTINGS = '/userSetting',
-  CREATE_USER_SETTINGS = '/userSetting',
+  USER_SETTINGS_BASE = '/userSetting',
 
   GET_ORGANIZATIONS = '/organization',
   CREATE_ORGANIZATION = '/organization',
@@ -25,4 +24,5 @@ export const enum FebeAPIConstants {
   CREATE_USER_ORG_MAPPING = '/userOrg',
   
   PROJECT_BASE = '/project',
+  VERSION_BASE = '/version';
 }

@@ -1,9 +1,18 @@
 import { Request, Response } from 'express';
-import { projectService } from '../services/project';
+import { projectService } from '../services/project-service';
 
-export async function getProjects(req: Request, res: Response) {
-  const envId = req.params.envId;
-  const data = await projectService.getByQuery(`environmentId:${envId}`);
+export async function getProjectsWithVersions(req: any, res: any) {
+  const data = await projectService.getProjectWithVersionsByQuery(req.query);
+  return res.status(200).json(data);
+}
+
+export async function getProjects(req: any, res: any) {
+  const data = await projectService.getByQuery(req.query);
+  return res.status(200).json(data);
+}
+
+export async function getProjectById(req: Request, res: Response) {
+  const data = await projectService.getProjectById(req.params.id);
   return res.status(200).json(data);
 }
 

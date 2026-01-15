@@ -150,3 +150,61 @@ export const GET_ORG_HIERARCHY = gql`
     }
   }
 `;
+
+export const GET_PROJECT_WITH_VERSION_SUMMARY = gql`
+  query GetProjectWithVersionSummary($query: String, $offset: String, $limit: String) {
+    projects: findprojectByQuery(
+      query: $query
+      start: $offset
+      rows: $limit
+      filterField: ""
+      filterQuery: ""
+      sort: ""
+      advanceField: ""
+      advanceQuery: ""
+      advance: "true"
+    ) {
+      data {
+        id: ID
+        name
+        description
+        orgId
+        subOrgId
+        createdAt
+        updatedAt
+        versions: findversionByQuery(
+          query: "projectId:\${ID}"
+          start: "0"
+          rows: "10"
+          filterField: ""
+          filterQuery: ""
+          sort: ""
+          advanceField: ""
+          advanceQuery: ""
+          advance: "true"
+        ) {
+          data {
+            ID
+            name
+            description
+            status
+            domain
+            graphQlUrl
+            restUrl
+            createdAt
+            updatedAt
+          }
+          pagination {
+            total
+            limit
+            offset
+          }
+        }
+      }
+      pagination {
+        total
+        limit
+        offset
+      }
+    }
+  }`;

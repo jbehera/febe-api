@@ -1,59 +1,63 @@
 import { z } from 'zod';
-import { IdSchema, PaginatedCollection } from './common-schema';
+import { IdSchema, PaginatedCollection, GqlCollection, ResourceMetadata } from './common-schema';
+import { VersionCore, VersionGqlItem } from './version-schema';
 
-const coreFields = {
+/**
+ * Abstracted core fields for Project
+ */
+export const ProjectCore = {
   orgId: IdSchema,
   subOrgId: IdSchema.nullish(),
-  environmentId: IdSchema,
   name: z.string().min(1).max(100),
-  description: z.string().max(255).optional(),
+  description: z.string().max(255).optional().nullable(),
+};
+
+const projectRestFields = {
+  ...ProjectCore,
+  environmentId: IdSchema,
 };
 
 export const Project = {
-  // ListItem: z.object({
-  //   ID: IdSchema,
-  //   ...coreFields,
-  // }).transform(({ ID, ...rest }) => ({
-  //   id: ID,
-  //   ...rest,
-  // })),
-
-  ListItem: z.object({
+  ListItemRes: z.object({
     response: z.object({
       ID: IdSchema,
-      ...coreFields
+      ...projectRestFields,
     }),
   }).transform((raw) => ({
     id: raw.response.ID,
-    orgId: raw.response.orgId,
-    subOrgId: raw.response.subOrgId,
-    environmentId: raw.response.environmentId,
-    name: raw.response.name,
-    description: raw.response.description
+    ...raw.response,
+    ID: undefined,
   })),
 
   ListRes: PaginatedCollection(
     z.object({
       ID: IdSchema,
-      ...coreFields,
+      ...projectRestFields,
+      
     }).transform(({ ID, ...rest }) => ({
       id: ID,
       ...rest,
     }))
   ),
-  // Input for POST
-  Create: z.object(coreFields),
 
-  // Input for PUT (Transforms id -> ID for the external service)
+  List: z.object({
+    envId: IdSchema,
+    orgId: IdSchema.nullish(),
+    subOrgId: IdSchema.nullish(),
+    rows: z.coerce.number().int().min(1).default(10),
+    start: z.coerce.number().int().min(0).default(0),
+  }),
+
+  Create: z.object(projectRestFields),
+
   Update: z.object({
     id: IdSchema,
-    ...coreFields,
+    ...projectRestFields,
   }).transform(({ id, ...rest }) => ({
     ID: id,
     ...rest,
   })),
 
-  // Standard Delete Response
   DeleteRes: z.object({
     responseMessage: z.string(),
   }).transform(data => ({
@@ -61,6 +65,22 @@ export const Project = {
   })),
 };
 
-// Type exports for Service layer
+const ProjectGqlItem = z.object({
+  id: IdSchema, // GraphQL uses lowercase id for projects
+  ...ProjectCore,
+  versions: GqlCollection(VersionGqlItem),
+});
+
+export const ProjectGql = {
+  ListItem: ProjectGqlItem,
+  Response: z.object({
+    data: z.object({
+      projects: GqlCollection(ProjectGqlItem),
+    }),
+  }).transform(raw => raw.data.projects),
+};
+
+export type ProjectListReq = z.infer<typeof Project.List>;
 export type ProjectCreateReq = z.infer<typeof Project.Create>;
 export type ProjectUpdateReq = z.output<typeof Project.Update>;
+export type ProjectWithVersions = z.infer<typeof ProjectGql.Response>;

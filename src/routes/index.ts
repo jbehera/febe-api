@@ -7,6 +7,7 @@ import { orgRoutes } from "./org";
 import { environmentRoutes } from "./env";
 import { subOrgRoutes } from './sub-org';
 import { projectRoutes } from './project';
+import { versionRoutes } from './version';
 
 
 router.use('/auth', authRoutes);
@@ -15,5 +16,6 @@ router.use('/organization', orgRoutes);
 router.use('/sub-organization', subOrgRoutes);
 router.use('/environment', environmentRoutes);
 router.use('/project', projectRoutes);
+router.use('/version', versionRoutes);
 
 export { router as apiRoutes };

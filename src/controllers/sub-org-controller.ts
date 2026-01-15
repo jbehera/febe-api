@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { subOrgService } from '../services/sub-organization';
+import { subOrgService } from '../services/sub-org-service';
 
 export async function addSubOrg(req: Request, res: Response) {
   const data = await subOrgService.create(req.body);

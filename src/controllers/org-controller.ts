@@ -2,14 +2,14 @@ import { Request, Response } from 'express';
 import {
   getOrgAndSubOrgWithEnvironments,
   updateOrg,
-} from '../services/organization';
-import { getUserSettingsByQuery } from '../services/user-settings';
+} from '../services/org-service';
+import { userSettingService } from '../services/user-settings-service';
 
 export async function getOrgHierarchy(req: Request, res: Response) {
   // get current user id after jwt decode
 
   const settingsId = req.params.settingsId;
-  const settings = await getUserSettingsByQuery(`ID:${settingsId}`);
+  const settings = await userSettingService.getByQuery(`ID:${settingsId}`);
   const orgHierarchy = await getOrgAndSubOrgWithEnvironments({
     query: `ID:${settings?.orgId}`
   });
