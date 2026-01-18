@@ -10,9 +10,9 @@ export const VersionCore = {
   schemaJson: z.string().optional(),
   status: z.coerce.number().default(1),
   notes: z.string().optional(),
-  domain: z.string().url().optional().nullable(),
-  graphQlUrl: z.string().url().optional().nullable(),
-  restUrl: z.string().url().optional().nullable(),
+  domain: z.url().optional().nullish(),
+  graphQlUrl: z.url().optional().nullish(),
+  restUrl: z.url().optional().nullish(),
 };
 
 const versionRestFields = {
