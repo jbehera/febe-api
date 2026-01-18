@@ -1,0 +1,363 @@
+You are a senior Node JS, TypeScript developer. I have a http-client that calls the rest endpoints (any third-party API) which does the folloing things:
+1. Logs the outging request. Retrievs the token if present in the in-coming request and forwards it
+2. Handles the response errors
+3. Validates the http response against a zod schema where the zod schema has the transformation methods that transforms the third-party responses into an expected format that I am passing to the nextjs client.
+
+Here is the code of my existing http-client.
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+} from 'axios';
+
+import { z } from 'zod';
+import { logger } from './logger';
+import { AppError } from './app-error';
+import { getRequestContext } from '../context/request-context';
+import { RestAPIResponse } from '../schemas';
+
+export class HttpClient {
+  private client: AxiosInstance;
+
+  constructor(baseURL: string) {
+    this.client = axios.create({
+      baseURL,
+      // timeout: 10000,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    this.initializeInterceptors();
+  }
+
+  private initializeInterceptors() {
+    // Request Interceptor: INJECTS TOKEN AUTOMATICALLY
+    this.client.interceptors.request.use(
+      (config: InternalAxiosRequestConfig) => {
+        logger.info(
+          `Outgoing Request: ${config.method?.toUpperCase()} ${config.url}`
+        );
+        // Retrieve the context for the *current* executing request
+        const context = getRequestContext();
+
+        if (context) {
+          if (context.token) {
+            // Auto-inject the Authorization header
+            config.headers.set('Authorization', `Bearer ${context.token}`);
+          }
+
+          // Optional: Forward Request ID for tracing across services
+          if (context?.traceId) {
+            config.headers.set('x-request-id', context.traceId);
+          }
+        }
+        return config;
+      },
+      (error: AxiosError) => Promise.reject(error)
+    );
+
+    // 2. Response Interceptor: Error Handling & Data Extraction
+    this.client.interceptors.response.use(
+      // SUCCESS HANDLER
+      (response: AxiosResponse): AxiosResponse => {
+        const context = getRequestContext();
+        // Log success, but return the original response object
+        logger.info(
+          `[${context?.traceId}] External API Success: ${response.status} ${response.config.url}`
+        );
+        return response;
+      },
+
+      // ERROR HANDLER
+      (error: AxiosError): Promise<never> => {
+        const context = getRequestContext();
+
+        // --- Normalization Logic for Failure ---
+        let statusCode = error.response?.status || 500;
+        let errorMessage = 'Request failed (Unknown)';
+        let responseData = error.response?.data;
+
+        if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+          statusCode = 504; // Gateway Timeout
+          errorMessage = 'External API took too long to respond.';
+        } else if (error.response) {
+          // Server responded with an error status (4xx, 5xx)
+          const extMessage = this.extractExternalErrorMessage(responseData);
+          errorMessage =
+            extMessage || error.response.statusText || errorMessage;
+        } else if (error.request) {
+          // Request was made but no response received (network issue)
+          statusCode = 503; // Service Unavailable
+          errorMessage = 'No response from external service.';
+        }
+
+        // Log the failure with trace ID
+        logger.error(
+          `[${context?.traceId}] External API Failure: ${statusCode} - ${errorMessage}`,
+          { errorDetails: responseData }
+        );
+
+        // Reject the Promise with a normalized error object
+        return Promise.reject({
+          status: statusCode,
+          message: errorMessage,
+          data: null,
+        } as RestAPIResponse<any>) as Promise<never>;
+      }
+    );
+  }
+
+  /**
+   * Helper to validate data against a Zod schema.
+   */
+  private validate<T extends z.ZodTypeAny>(
+    schema: T,
+    data: unknown
+  ): z.infer<T> {
+    const result = schema.safeParse(data);
+
+    if (!result.success) {
+      // Flattening errors makes them much easier to read in logs
+      const errorDetails = result.error.flatten();
+      logger.error('Zod Validation Failed', { errors: errorDetails });
+
+      throw new AppError('Third-party API contract violation', 502);
+    }
+
+    return result.data;
+  }
+
+  private extractExternalErrorMessage(responseData: any): string | null {
+    // Check for the non-standard failure format you provided:
+    // { "Message": { "responseMessage": "User / password incorrect" } }
+    if (responseData?.Message?.responseMessage) {
+      return responseData.Message.responseMessage;
+    }
+    // Check for common error formats (e.g., Axios default)
+    if (typeof responseData?.error === 'string') {
+      return responseData.error;
+    }
+    return null;
+  }
+
+  public async get<T extends z.ZodTypeAny>(
+    url: string,
+    schema: T,
+    config?: AxiosRequestConfig
+  ): Promise<RestAPIResponse<z.infer<T>>> {
+    const response = await this.client.get(url, config);
+    const validatedData = this.validate(schema, response.data);
+
+    return {
+      status: response.status,
+      message: 'Success',
+      data: validatedData,
+    };
+  }
+
+  public async post<T extends z.ZodTypeAny, D = unknown>(
+    url: string,
+    data: D,
+    schema: T,
+    config?: AxiosRequestConfig
+  ): Promise<RestAPIResponse<z.infer<T>>> {
+    const response = await this.client.post(url, data, config);
+    const validatedData = this.validate(schema, response.data);
+
+    return {
+      status: response.status,
+      message: 'Success',
+      data: validatedData,
+    };
+  }
+
+  public async put<T extends z.ZodTypeAny, D = unknown>(
+    url: string,
+    data: D,
+    schema: T,
+    config?: AxiosRequestConfig
+  ): Promise<RestAPIResponse<z.infer<T>>> {
+    const response = await this.client.put(url, data, config);
+    const validatedData = this.validate(schema, response.data);
+
+    return {
+      status: response.status,
+      message: 'Success',
+      data: validatedData,
+    };
+  }
+
+  public async delete<T extends z.ZodTypeAny>(
+    url: string,
+    schema: T,
+    config?: AxiosRequestConfig
+  ): Promise<RestAPIResponse<z.infer<T>>> {
+    const response = await this.client.delete(url, config);
+    const validatedData = this.validate(schema, response.data);
+
+    return {
+      status: response.status,
+      message: 'Success',
+      data: validatedData,
+    };
+  }
+}
+
+export const httpClient = new HttpClient(
+  process.env.FEBE_REST_API_BASE_URL || ''
+);
+
+
+
+Please create a graphql client similar to this having all of these behaviours making sure that it is type safe 
+and generic in terms of handling the request, response data. 
+
+----------
+
+Here is the query:
+query GetOrgHirarchy($query: String, $token: String) {
+  organizations: findorganizationByQuery(
+    query: $query
+    start: "0"
+    rows: "9"
+    filterField: ""
+    filterQuery: ""
+    sort: ""
+    advanceField: ""
+    advanceQuery: ""
+    advance: "true"
+    token: $token
+  ) {
+    data {
+      id: ID
+      name
+      description
+      environments: findenvironmentByQuery(
+        query: "orgId:${ID}"
+        start: "0"
+        rows: "9"
+        filterField: ""
+        filterQuery: ""
+        sort: ""
+        advanceField: ""
+        advanceQuery: ""
+        advance: "true"
+        token: $token
+      ) {
+        data {
+          id: ID
+          name
+          description
+        }
+        pagination {
+          total
+          limit
+          offset
+        }
+      }
+      subOrganizations: findsubOrganizationByQuery(
+        query: "orgId:${ID}"
+        start: "0"
+        rows: "9"
+        filterField: ""
+        filterQuery: ""
+        sort: ""
+        advanceField: ""
+        advanceQuery: ""
+        advance: "true"
+        token: $token
+      ) {
+        data {
+          id: ID
+          name
+          description
+          environments: findenvironmentByQuery(
+            query: "subOrgId:${ID}"
+            start: "0"
+            rows: "9"
+            filterField: ""
+            filterQuery: ""
+            sort: ""
+            advanceField: ""
+            advanceQuery: ""
+            advance: "true"
+            token: $token
+          ) {
+            data {
+              id: ID
+              name
+              description
+            }
+            pagination {
+              total
+              limit
+              offset
+            }
+          }
+        }
+        pagination {
+          total
+          limit
+          offset
+        }
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+    }
+  }
+}
+
+variables:
+{
+  "query": "ID:2e49f282-85d5-4866-af7d-8133a75e6769",
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiI0NGQ5MjczNS0zNDE1LTQxZmUtYjliMC0xYWQyNGIyNWMzZTciLCJlbWFpbCI6ImpiZWhlcmExQGZlYmVjLmNvbSIsInN1YiI6ImpiZWhlcmExQGZlYmVjLmNvbSIsImlhdCI6MTc2Njg1ODY2MSwiZXhwIjoxNzY2OTQ1MDYxfQ.ey7BBJmH5k6anSqgCKGW7A_BsjO-9DGZ49VExe1IEDY"
+}
+
+and the query response is:
+{
+  "data": {
+    "organizations": {
+      "data": [
+        {
+          "id": "2e49f282-85d5-4866-af7d-8133a75e6769",
+          "name": "Master Org",
+          "description": "Default Organization",
+          "environments": {
+            "data": [
+              {
+                "id": "edad3853-0184-4c0a-bb46-09473c2c8312",
+                "name": "Sandbox",
+                "description": "Sandbox"
+              }
+            ],
+            "pagination": {
+              "total": 1,
+              "limit": "9",
+              "offset": "0"
+            }
+          },
+          "subOrganizations": {
+            "data": [],
+            "pagination": {
+              "total": 0,
+              "limit": "9",
+              "offset": "0"
+            }
+          }
+        }
+      ],
+      "pagination": {
+        "total": 1,
+        "limit": "9",
+        "offset": "0"
+      }
+    }
+  }
+}
+
+Please create the zod schema, request types and a controller method to retrieve the results
+

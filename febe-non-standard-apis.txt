@@ -80,3 +80,19 @@ Can you please convert any sort of such errors to be converted to a standard err
         }
     ]
 }
+
+
+Org update - 
+PUT: {{baseUrl}}/api/organization
+Response: 
+{
+    "responseMessage": "Content updated Successfully",
+    "responseType": "updated",
+    "statusCode": 200,
+    "ID": "2e49f282-85d5-4866-af7d-8133a75e6769",
+    "response": {
+        "name": "Master Org",
+        "description": "Default Organization",
+        "ID": "2e49f282-85d5-4866-af7d-8133a75e6769"
+    }
+}
