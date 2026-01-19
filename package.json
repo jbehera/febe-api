@@ -10,10 +10,11 @@
     "worker:email": "node dist/workers/email.worker.js",
     "dev:worker:email": "ts-node src/workers/email.worker.ts",
     "lint": "eslint src/ --ext .ts",
-    "test": "vitest"
+    "test": "vitest",
+    "vercel-build": "npm run build"
   },
   "keywords": [],
-  "author": "",
+  "author": "Jayachandra Behera",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.6.2",

@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "febe-api",
   "builds": [
     {
       "src": "src/index.ts",
