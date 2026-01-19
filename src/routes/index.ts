@@ -18,4 +18,8 @@ router.use('/environment', environmentRoutes);
 router.use('/project', projectRoutes);
 router.use('/version', versionRoutes);
 
+router.get('/health', (req, res) => {
+  res.send('Health Ok!');
+});
+
 export { router as apiRoutes };

@@ -15,9 +15,6 @@ app.use(contextMiddleware);
 
 setGlobalErrorHandler(validationErrorHandler);
 
-app.get('/health-check', (req: Request, res: Response) => {
-  res.send('Health Ok!');
-});
 
 app.use('/api', apiRoutes);
 
