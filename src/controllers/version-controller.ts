@@ -26,3 +26,11 @@ export async function deleteVersion(req: Request, res: Response) {
   const data = await versionService.remove(req.params.id);
   return res.status(200).json(data);
 }
+
+export async function publishVersion(req: Request, res: Response) {
+  // fetch existing versions by projectId sort by createdAt desc
+
+  // get the latest version
+
+  // 
+}

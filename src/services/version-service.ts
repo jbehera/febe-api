@@ -59,4 +59,9 @@ export const versionService = {
     );
     return data;
   },
+
+  async publish() {
+    
+
+  }
 };
