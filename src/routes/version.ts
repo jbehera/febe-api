@@ -4,10 +4,11 @@ import { z } from 'zod';
 import { IdSchema, Version } from '../schemas';
 import {
   getVersions,
-  addVersion,
   updateVersion,
   deleteVersion,
   getVersionById,
+  publishVersion,
+  saveVersion,
 } from '../controllers/version-controller';
 
 const router = Router();
@@ -16,16 +17,19 @@ const router = Router();
 router.get('/', validate({ query: Version.List }), getVersions);
 router.get('/:id', validate({ params: { id: IdSchema } }), getVersionById);
 
-// POST create version
-router.post('/', validate({ body: Version.Create }), addVersion);
+// POST save version (replaces old addVersion)
+router.post('/save', validate({ body: Version.Create }), saveVersion);
 
-// PUT update version
+// POST publish version
+router.post('/publish', validate({ body: Version.Publish }), publishVersion);
+
+// PUT update version (for status and description changes primarily)
 router.put('/', validate({ body: Version.Update }), updateVersion);
 
 // DELETE version by ID
 router.delete(
   '/:id',
-  validate({ params: z.object({ id: z.string().uuid() }) }),
+  validate({ params: z.object({ id: IdSchema }) }),
   deleteVersion
 );
 

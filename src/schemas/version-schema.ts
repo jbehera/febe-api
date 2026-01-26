@@ -48,15 +48,37 @@ export const Version = {
 
   List: z.object({
     projectId: IdSchema,
+    status: z.int().optional(),
     rows: z.coerce.number().int().min(1).default(10),
     start: z.coerce.number().int().min(0).default(0),
+    sort: z.string().optional()
   }),
 
   Create: z.object(versionRestFields),
 
+  Publish: z.object({
+    id: IdSchema,
+    settingsId: IdSchema,
+    projectId: IdSchema,
+    projectName: z.string(),
+    schemaJson: z.string(),
+    // schemaJson: z
+    //   .record(z.string(), z.any())
+    //   .refine((obj) => Object.keys(obj).length > 0, {
+    //     message: "schemJson cannot be an empty object",
+    //   }),
+    transformedJson: z
+      .record(z.string(), z.any())
+      .refine((obj) => Object.keys(obj).length > 0, {
+        message: "transformedJson cannot be an empty object",
+      }),
+    incrementType: z.union([z.literal('major'), z.literal('minor'), z.literal('patch')]).default('major')
+  }),
+
   Update: z.object({
     id: IdSchema,
     ...versionRestFields,
+    name: z.string().optional(), // override name field to be optional in Update
   }).transform(({ id, ...rest }) => ({
     ID: id,
     ...rest,
@@ -80,4 +102,4 @@ export const VersionGqlItem = z.object({
 
 export type VersionListReq = z.infer<typeof Version.List>;
 export type VersionCreateReq = z.infer<typeof Version.Create>;
-export type VersionUpdateReq = z.output<typeof Version.Update>;
+export type VersionUpdateReq = z.input<typeof Version.Update>;
