@@ -12,8 +12,8 @@ import { AppError } from '../utils/app-error';
 
 export const versionService = {
   async getByQuery(parsedQs: VersionListReq) {
-    const { rows, start, sort, projectId } = parsedQs;
-    const query = `projectId:${projectId}`;
+    const { rows, start, sort, projectId, status } = parsedQs;
+    const query = status ? `projectId:${projectId} && status:${status}` : `projectId:${projectId}`;
     const { data } = await httpClient.get(
       FebeAPIConstants.VERSION_BASE,
       Version.ListRes,

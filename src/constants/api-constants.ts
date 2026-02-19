@@ -25,4 +25,9 @@ export const enum FebeAPIConstants {
   
   PROJECT_BASE = '/project',
   VERSION_BASE = '/version',
+  CHAT_HISTORY_BASE = '/chatHistory',
+
+  CONFIGURATION_BASE = '/configuration',
+  DEPLOYMENT_CONFIGURATION_BASE = '/deploymentConfiguration',
+  DEPLOYMENT_BASE = '/deployment',
 }

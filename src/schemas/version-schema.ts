@@ -48,7 +48,7 @@ export const Version = {
 
   List: z.object({
     projectId: IdSchema,
-    status: z.int().optional(),
+    status: z.coerce.number().int().optional(),
     rows: z.coerce.number().int().min(1).default(10),
     start: z.coerce.number().int().min(0).default(0),
     sort: z.string().optional()
@@ -62,11 +62,6 @@ export const Version = {
     projectId: IdSchema,
     projectName: z.string(),
     schemaJson: z.string(),
-    // schemaJson: z
-    //   .record(z.string(), z.any())
-    //   .refine((obj) => Object.keys(obj).length > 0, {
-    //     message: "schemJson cannot be an empty object",
-    //   }),
     transformedJson: z
       .record(z.string(), z.any())
       .refine((obj) => Object.keys(obj).length > 0, {

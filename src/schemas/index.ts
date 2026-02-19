@@ -8,4 +8,10 @@ export * from './sub-org-schema';
 export * from './project-schema';
 export * from './version-schema';
 
+export * from './version-schema';
+export * from './chat-history-schema';
+export * from './configuration-schema';
+export * from './deployment-configuration-schema';
+export * from './deployment-schema';
+
 export * from './gql-schemas';
