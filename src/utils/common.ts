@@ -103,33 +103,6 @@ export function incrementVersion(version: string, type: VersionType): string {
   }
 }
 
-// export function escapeJson(json: any): string {
-//   try {
-//     if (typeof json !== 'object')
-//       throw new Error('Invalid input: JSON object expected');
-
-//     return JSON.stringify(json).replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\\"');
-//   } catch (error) {
-//     console.error('Error escaping JSON:', error);
-//     return ''; // Return empty string or handle appropriately
-//   }
-// }
-
-// export function unescapeJson(escapedJson: string): any {
-//   try {
-//     if (typeof escapedJson !== 'string')
-//       throw new Error('Invalid input: String expected');
-
-//     // Reverse the escape process
-//     const jsonString = escapedJson.replace(/\\\\"/g, '"').replace(/\\\\\\\\/g, '\\\\');
-
-//     return JSON.parse(jsonString);
-//   } catch (error) {
-//     console.error('Error unescaping JSON:', error);
-//     return null; // Return null or handle appropriately
-//   }
-// }
-
 export function escapeJson(json: any): string {
   try {
     if (typeof json !== 'object')

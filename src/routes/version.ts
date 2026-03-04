@@ -9,6 +9,7 @@ import {
   getVersionById,
   publishVersion,
   saveVersion,
+  deployVersion,
 } from '../controllers/version-controller';
 
 const router = Router();
@@ -22,6 +23,9 @@ router.post('/save', validate({ body: Version.Create }), saveVersion);
 
 // POST publish version
 router.post('/publish', validate({ body: Version.Publish }), publishVersion);
+
+// POST deploy version
+router.post('/deploy', deployVersion);
 
 // PUT update version (for status and description changes primarily)
 router.put('/', validate({ body: Version.Update }), updateVersion);
