@@ -16,7 +16,7 @@ const start = async () => {
     throw new Error('FEBE_REST_API_BASE_URL must be specified');
   }
 
-  if (!process.env.REDIS_URI) {
+  if (process.env.NODE_ENV === 'production' && !process.env.REDIS_URI) {
     throw new Error('REDIS_URI must be specified');
   }
 
