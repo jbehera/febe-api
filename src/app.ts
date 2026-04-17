@@ -36,7 +36,14 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(contextMiddleware);
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  swaggerOptions: {
+    requestInterceptor: (request: any) => {
+      request.headers['ngrok-skip-browser-warning'] = 'true';
+      return request;
+    },
+  },
+}));
 
 setGlobalErrorHandler(validationErrorHandler);
 
