@@ -10,9 +10,9 @@ export const VersionCore = {
   schemaJson: z.string().optional(),
   status: z.coerce.number().default(1),
   notes: z.string().optional(),
-  domain: z.url().optional().nullish(),
-  graphQlUrl: z.url().optional().nullish(),
-  restUrl: z.url().optional().nullish(),
+  domain: z.string().optional().nullable(),
+  graphQlUrl: z.string().optional().nullable(),
+  restUrl: z.string().optional().nullable(),
 };
 
 const versionRestFields = {
@@ -28,11 +28,10 @@ export const Version = {
       ...versionRestFields,
       ...ResourceMetadata,
     }),
-  }).transform((raw) => ({
-    id: raw.response.ID,
-    ...raw.response,
-    ID: undefined, // Cleanup
-  })),
+  }).transform((raw) => {
+    const { ID, ...rest } = raw.response;
+    return { id: ID, ...rest };
+  }),
 
   // Manual ID -> id transformation for list
   ListRes: PaginatedCollection(

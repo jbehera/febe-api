@@ -115,17 +115,27 @@ export function escapeJson(json: any): string {
   }
 }
 
-export function unescapeJson(escapedJson: string): any {
+export function unescapeJson(escapedJson: unknown): any {
   try {
-    if (typeof escapedJson !== 'string')
-      throw new Error('Invalid input: String expected');
+    // Already a parsed object, return as-is
+    if (typeof escapedJson === 'object' && escapedJson !== null) {
+      return escapedJson;
+    }
 
-    // Reverse the escape process
+    if (typeof escapedJson !== 'string' || !escapedJson) return null;
+
+    // Try direct parse first (data stored as plain JSON string)
+    try {
+      return JSON.parse(escapedJson);
+    } catch {
+      // Fall through to unescape and retry
+    }
+
+    // Reverse the escape process and retry
     const jsonString = escapedJson.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-
     return JSON.parse(jsonString);
   } catch (error) {
     console.error('Error unescaping JSON:', error);
-    return null; // Return null or handle appropriately
+    return null;
   }
 }

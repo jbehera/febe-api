@@ -22,8 +22,8 @@ export const IdSchema = z.uuid();
  */
 export const ResourceMetadata = {
   createdBy: z.string().optional(),
-  createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
+  createdAt: z.iso.datetime({ offset: true }).optional(),
+  updatedAt: z.iso.datetime({ offset: true }).optional(),
 };
 
 export const GqlCollection = <T extends z.ZodTypeAny>(dataSchema: T) =>

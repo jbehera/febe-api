@@ -71,10 +71,14 @@ export const versionService = {
   },
 
   async publish(url: string, payload: unknown) {
+    const token = process.env.GITHUB_TOKEN || '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';
+    if (!token) {
+      throw new AppError('GitHub token not configured', 500);
+    }
     const response = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'token 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',
+        Authorization: `token ${token}`,
         Accept: 'application/vnd.github.v3+json',
       },
     });
@@ -115,14 +119,16 @@ export const versionService = {
     incomingSchemaJson: any,
     incrementType: 'major' | 'minor' | 'patch'
   ): Promise<string> {
-    const latestPublished = (
-      await versionService.getByQuery({
-        projectId: projectId,
-        sort: 'createdAt desc',
-        rows: 1,
-        start: 0,
-      })
-    )?.data[0];
+    // Fetch recent versions and skip snapshots — only consider formally published ones
+    const versions = await versionService.getByQuery({
+      projectId: projectId,
+      sort: 'createdAt desc',
+      rows: 20,
+      start: 0,
+    });
+    const latestPublished = versions?.data.find(
+      (v) => !v.name.includes('-snapshot.')
+    );
 
     if (!latestPublished) {
       return '1.0.0'; // First formal version
@@ -191,10 +197,14 @@ export const versionService = {
   },
 
   async deploy(url: string, payload: unknown) {
+    const token = process.env.GITHUB_TOKEN || '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';
+    if (!token) {
+      throw new AppError('GitHub token not configured', 500);
+    }
     const response = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'token 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',
+        Authorization: `token ${token}`,
         Accept: 'application/vnd.github.v3+json',
       },
     });

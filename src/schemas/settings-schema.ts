@@ -18,11 +18,10 @@ export const UserSetting = {
       ID: IdSchema,
       ...UserSettingCore
     }),
-  }).transform((raw) => ({
-    id: raw.response.ID,
-    ...raw.response,
-    ID: undefined,
-  })),
+  }).transform((raw) => {
+    const { ID, ...rest } = raw.response;
+    return { id: ID, ...rest };
+  }),
 
   // Paginated List Response
   ListRes: PaginatedCollection(
