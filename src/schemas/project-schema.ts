@@ -23,11 +23,10 @@ export const Project = {
       ID: IdSchema,
       ...projectRestFields,
     }),
-  }).transform((raw) => ({
-    id: raw.response.ID,
-    ...raw.response,
-    ID: undefined,
-  })),
+  }).transform((raw) => {
+    const { ID, ...rest } = raw.response;
+    return { id: ID, ...rest };
+  }),
 
   ListRes: PaginatedCollection(
     z.object({

@@ -16,11 +16,10 @@ export const DeploymentConfiguration = {
       ID: IdSchema,
       ...deploymentConfigurationRestFields,
     }),
-  }).transform((raw) => ({
-    id: raw.response.ID,
-    ...raw.response,
-    ID: undefined,
-  })),
+  }).transform((raw) => {
+    const { ID, ...rest } = raw.response;
+    return { id: ID, ...rest };
+  }),
 
   ListRes: PaginatedCollection(
     z.object({

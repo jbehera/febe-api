@@ -4,7 +4,7 @@ import { IdSchema, PaginatedCollection } from './common-schema';
 export const DeploymentCore = {
   projectId: IdSchema,
   versionId: IdSchema,
-  deploymentConfigurationId: IdSchema,
+  deploymentConfigurationId: z.string().min(1),
   deployedBy: z.string().min(1).max(100),
   status: z.string().min(1).max(100),
 };
@@ -19,11 +19,10 @@ export const Deployment = {
       ID: IdSchema,
       ...deploymentRestFields,
     }),
-  }).transform((raw) => ({
-    id: raw.response.ID,
-    ...raw.response,
-    ID: undefined,
-  })),
+  }).transform((raw) => {
+    const { ID, ...rest } = raw.response;
+    return { id: ID, ...rest };
+  }),
 
   ListRes: PaginatedCollection(
     z.object({

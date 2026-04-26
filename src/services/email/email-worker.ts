@@ -5,28 +5,32 @@ import { SendTemplateEmailParams } from "./types";
 import { EMAIL_QUEUE_NAME } from "./email-queue";
 import { logger } from "../../utils/logger";
 
-const emailService = new ZohoEmailService();
+if (process.env.NODE_ENV === 'production' && redisClient) {
+  const emailService = new ZohoEmailService();
 
-export const emailWorker = new Worker<SendTemplateEmailParams>(
-  EMAIL_QUEUE_NAME,
-  async (job: Job<SendTemplateEmailParams>) => {
-    logger.info("Processing email job", {
-      jobId: job.id,
-      templateId: job.data.templateId,
-    });
+  const emailWorker = new Worker<SendTemplateEmailParams>(
+    EMAIL_QUEUE_NAME,
+    async (job: Job<SendTemplateEmailParams>) => {
+      logger.info("Processing email job", {
+        jobId: job.id,
+        templateId: job.data.templateId,
+      });
 
-    await emailService.sendTemplateEmail(job.data);
-  },
-  { connection: redisClient }
-);
+      await emailService.sendTemplateEmail(job.data);
+    },
+    { connection: redisClient }
+  );
 
-emailWorker.on("completed", (job) => {
-  logger.info("Email job completed", { jobId: job.id });
-});
-
-emailWorker.on("failed", (job, err) => {
-  logger.error("Email job failed", {
-    jobId: job?.id,
-    error: err.message,
+  emailWorker.on("completed", (job) => {
+    logger.info("Email job completed", { jobId: job.id });
   });
-});
+
+  emailWorker.on("failed", (job, err) => {
+    logger.error("Email job failed", {
+      jobId: job?.id,
+      error: err.message,
+    });
+  });
+} else {
+  logger.info("Email worker skipped (dev mode - emails sent directly)");
+}

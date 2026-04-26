@@ -19,11 +19,10 @@ export const ChatHistory = {
       createdAt: z.string(),
       updatedAt: z.string(),
     }),
-  }).transform((raw) => ({
-    id: raw.response.ID,
-    ...raw.response,
-    ID: undefined,
-  })),
+  }).transform((raw) => {
+    const { ID, ...rest } = raw.response;
+    return { id: ID, ...rest };
+  }),
 
   ListRes: PaginatedCollection(
     z.object({

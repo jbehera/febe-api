@@ -83,10 +83,16 @@ export async function publishVersion(req: Request, res: Response) {
   } = req.body;
   const userSettings = await userSettingService.getByQuery(`ID:${settingsId}`);
 
+  // Parse the incoming escaped schemaJson once so all comparisons work against objects
+  const parsedSchemaJson = unescapeJson(schemaJson);
+  if (!parsedSchemaJson) {
+    throw new AppError('Invalid schemaJson in request body', 400);
+  }
+
   // 1. Determine the next formal (published) version name
   const nextFormalVersionName = await versionService.getNextFormalVersion(
     projectId,
-    schemaJson,
+    parsedSchemaJson,
     incrementType || 'minor'
   ); // Default to minor if not provided
 
@@ -102,7 +108,7 @@ export async function publishVersion(req: Request, res: Response) {
   });
 
   const matchingDraft = versions.data.find((v) =>
-    areJsonObjectsEqual(unescapeJson(v.schemaJson ?? ''), schemaJson, [
+    areJsonObjectsEqual(unescapeJson(v.schemaJson ?? ''), parsedSchemaJson, [
       'createdAt',
       'updatedAt',
     ])
@@ -150,6 +156,7 @@ export async function publishVersion(req: Request, res: Response) {
       },
     },
   };
+  console.log("🚀 ~ publishVersion ~ payload:", payload)
 
   try {
     const response = await versionService.publish(
@@ -158,21 +165,20 @@ export async function publishVersion(req: Request, res: Response) {
     );
 
     // 3. Update status to 'published' on successful external publication
-    // await versionService.update({
-    //   id: versionRecordIdToPublish,
-    //   projectId,
-    //   status: 3 // Published
-    // });
+    await versionService.update({
+      id: versionRecordIdToPublish,
+      projectId,
+      name: nextFormalVersionName,
+      status: 3, // Published
+    });
     return res.status(response.status).send('Schema published successfully!');
-  } catch (error) {
-    // 4. Handle publish failure: revert status
-    console.error('Schema publish failed:', error);
-    // await versionService.update({
-    //   id: versionRecordIdToPublish,
-    //   projectId,
-    //   status: 1 // Revert to 'created' (draft) status
-    // });
-    throw new AppError('Failed to publish schema.', 500);
+  } catch (error: any) {
+    const statusCode = error.response?.status || error.statusCode || 500;
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to publish schema.';
+    throw new AppError(message, statusCode);
   }
 }
 
