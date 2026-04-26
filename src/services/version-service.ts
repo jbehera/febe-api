@@ -71,7 +71,7 @@ export const versionService = {
   },
 
   async publish(url: string, payload: unknown) {
-    const token = process.env.GITHUB_TOKEN || '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';
+    const token = process.env.GITHUB_TOKEN;
     if (!token) {
       throw new AppError('GitHub token not configured', 500);
     }
@@ -197,7 +197,7 @@ export const versionService = {
   },
 
   async deploy(url: string, payload: unknown) {
-    const token = process.env.GITHUB_TOKEN || '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';
+    const token = process.env.GITHUB_TOKEN;
     if (!token) {
       throw new AppError('GitHub token not configured', 500);
     }
