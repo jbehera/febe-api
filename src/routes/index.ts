@@ -12,6 +12,7 @@ import { chatHistoryRoutes } from './chat-history';
 import { configurationRoutes } from './configuration';
 import { deploymentConfigurationRoutes } from './deployment-configuration';
 import { deploymentRoutes } from './deployment';
+import { webhookRoutes } from './webhook';
 
 
 router.use('/auth', authRoutes);
@@ -25,6 +26,7 @@ router.use('/chat-history', chatHistoryRoutes);
 router.use('/configuration', configurationRoutes);
 router.use('/deployment-configuration', deploymentConfigurationRoutes);
 router.use('/deployment', deploymentRoutes);
+router.use('/webhook', webhookRoutes);
 
 router.get('/health', (req, res) => {
   res.send('Health Ok!');
