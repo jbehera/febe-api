@@ -4,7 +4,9 @@ dotenv.config(); // Initialize dot env before access
 // import mongoose from 'mongoose';
 // import https from 'https';
 // import fs from 'fs';
+import { createServer } from 'http';
 import { app } from './app';
+import { initializeSocket } from './utils/socket';
 // import { redisWrapper } from './redis-wrapper';
 
 
@@ -43,7 +45,13 @@ const start = async () => {
     process.exit(0);
   });
 
-  app.listen(port, () => {
+  // Create HTTP server for Socket.io
+  const server = createServer(app);
+  
+  // Initialize Socket.io
+  initializeSocket(server);
+
+  server.listen(port, () => {
     console.log(`Server is running on the port: ${port}`);
   });
   // https

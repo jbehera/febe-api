@@ -26,7 +26,7 @@ router.use('/chat-history', chatHistoryRoutes);
 router.use('/configuration', configurationRoutes);
 router.use('/deployment-configuration', deploymentConfigurationRoutes);
 router.use('/deployment', deploymentRoutes);
-router.use('/webhook', webhookRoutes);
+router.use('/webhooks', webhookRoutes);
 
 router.get('/health', (req, res) => {
   res.send('Health Ok!');
