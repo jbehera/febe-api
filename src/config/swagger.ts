@@ -121,17 +121,15 @@ export const swaggerSpec: OpenAPIV3.Document = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['email', 'firstName', 'lastName', 'address', 'company', 'password', 'confirmPassword'],
+                required: ['email', 'firstName', 'lastName', 'company', 'password'],
                 properties: {
                   email: { type: 'string', format: 'email' },
                   firstName: { type: 'string', minLength: 1 },
                   middleName: { type: 'string', nullable: true },
                   lastName: { type: 'string', minLength: 1 },
-                  address: { type: 'string', minLength: 1 },
                   company: { type: 'string', minLength: 1 },
                   role: { type: 'string', default: 'user' },
                   password: { type: 'string', minLength: 8 },
-                  confirmPassword: { type: 'string', minLength: 8 },
                 },
               },
             },

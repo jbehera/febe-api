@@ -79,9 +79,7 @@ export async function signUp(req: Request, res: Response) {
     email,
     firstName,
     lastName,
-    middleName,
     password,
-    address,
     company,
     role,
   } = req.body;
@@ -89,10 +87,8 @@ export async function signUp(req: Request, res: Response) {
   const signUpResponse = await signUpUser({
     email,
     firstName,
-    middleName,
     lastName,
     password,
-    address,
     company,
     role,
   });
@@ -102,30 +98,33 @@ export async function signUp(req: Request, res: Response) {
   );
   const activationLink = `${process.env.FEBE_UI_APP_URL}/activate?code=${activationCode}`;
 
-  await enqueueEmail({
-    templateId: FebeEmailTemplates.ACCOUNT_ACTIVATION,
-    to: [{ email: email, name: firstName + ' ' + lastName }],
-    cc: [{ email: 'jayanitr2003@gmail.com', name: 'Jayachandra' }],
-    mergeInfo: {
-      companyName: 'Febe Cloud',
-      activationLink: activationLink,
-      supportEmail: 'support@febecloud.com',
-      companyWebsite: 'https://febecloud.com',
-      year: new Date().getFullYear().toString(),
-    },
-  });
+  // Send email asynchronously - don't block signup response
+  // enqueueEmail({
+  //   templateId: FebeEmailTemplates.ACCOUNT_ACTIVATION,
+  //   to: [{ email: email, name: firstName + ' ' + lastName }],
+  //   cc: [{ email: 'jayanitr2003@gmail.com', name: 'Jayachandra' }],
+  //   mergeInfo: {
+  //     companyName: 'Febe Cloud',
+  //     activationLink: activationLink,
+  //     supportEmail: 'support@febecloud.com',
+  //     companyWebsite: 'https://febecloud.com',
+  //     year: new Date().getFullYear().toString(),
+  //   },
+  // }).catch((error) => {
+  //   console.log("🚀 ~ signUp ~ error:", error)
+  //   // logger.error('Failed to send activation email', {
+  //   //   email,
+  //   //   error: error.message,
+  //   // });
+  // });
 
   res.status(200).json(signUpResponse);
 }
 
 export async function activateUser(req: Request, res: Response) {
-  const { code } = req.body;
-  const payload = {
-    userActivationKey: code as string,
-  };
+  const { userActivationKey } = req.body;
 
-  // Call the activation endpoint
-  const activationResponse = await activateNewUser(payload.userActivationKey);
+  const activationResponse = await activateNewUser(userActivationKey);
 
   return res.status(200).json(activationResponse);
 }

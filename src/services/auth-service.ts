@@ -30,8 +30,7 @@ export async function signUpUser(signUpPayload: any) {
     FebeAPIConstants.SIGN_UP,
     payload,
     SignUpResponseSchema
-  );
-  
+  );  
   return response.data;
 }
 

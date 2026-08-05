@@ -49,7 +49,6 @@ export const UserGetSchema = z
         middleName: z.string().nullable().optional(),
         email: z.email(),
         ID: z.string(), // External uppercase ID
-        address: z.string(),
         role: z.string(),
         company: z.string(),
       })
@@ -68,7 +67,6 @@ export const UserGetSchema = z
       middleName: rawUser.middleName,
       email: rawUser.email,
       id: rawUser.ID, // Transformation: ID -> id
-      address: rawUser.address,
       role: rawUser.role,
       company: rawUser.company,
     };
@@ -105,32 +103,26 @@ export const SignUpRequestSchema = z
     firstName: z.string().min(1, 'First name is required'),
     middleName: z.string().optional().nullable(),
     lastName: z.string().min(1, 'Last name is required'),
-    address: z.string().min(1, 'Address is required'),
     company: z.string().min(1, 'Company is required'),
     role: z.string().default('user'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z
-      .string()
-      .min(8, 'Confirm Password must be at least 8 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters')
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-  });
 
 export const SignUpResponseSchema = z
   .object({
     data: z.object({
-      responseMessage: z.string(),
-      responseType: z.string(),
-      activationCode: z.string(),
-      statusCode: z.number(),
-      ID: z.uuid(), 
-    }),
+      responseMessage: z.string().optional(),
+      responseType: z.string().optional(),
+      activationCode: z.string().optional().nullable(),
+      statusCode: z.number().optional(),
+      ID: z.string().optional().nullable(),
+      // Include any additional fields that might come from the API
+    }).passthrough(),
   })
   .transform((raw) => ({
-    id: raw.data.ID,
-    activationCode: raw.data.activationCode,
-    status: raw.data.statusCode,
+    id: raw.data.ID || '',
+    activationCode: raw.data.activationCode || '',
+    status: raw.data.statusCode || 200,
   }));
 
 
