@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import { logger } from '../utils/logger';
 import { emitDeploymentUpdate, emitPublishUpdate } from '../utils/socket';
+import { versionService } from '../services/version-service';
 
 export async function handleDeploymentWebhook(req: Request, res: Response) {
-  const { deploymentId, status, versionId, environment, message, timestamp } =
+  const { status, versionId, graphQlUrl, restUrl, environment, message, timestamp } =
     req.body;
 
   logger.info(
-    `[Webhook] Deployment ${deploymentId} status: ${status}`,
-    { deploymentId, status, versionId, environment }
+    `[Webhook] Deployment version ${versionId} status: ${status}`,
+    { status, versionId, environment }
   );
 
   try {
@@ -21,8 +22,16 @@ export async function handleDeploymentWebhook(req: Request, res: Response) {
 
     const deploymentStatus = statusMap[status] ?? 0;
 
+    const version = await versionService.getVersionById(versionId);
+
+    // Update the version with status, graphQlUrl and restUrl
+    if(version) {
+      await versionService.update({ id: versionId, projectId: version.id, status, graphQlUrl, restUrl });
+    }
+    
+
     // Emit to frontend via Socket.io
-    emitDeploymentUpdate(deploymentId, {
+    emitDeploymentUpdate(versionId, {
       status: deploymentStatus,
       statusLabel: status,
       message,
@@ -31,18 +40,18 @@ export async function handleDeploymentWebhook(req: Request, res: Response) {
     });
 
     logger.info(
-      `[Webhook] Deployment ${deploymentId} status update emitted to ${deploymentStatus}`
+      `[Webhook] Deployment versionId: ${versionId} status update emitted to ${deploymentStatus}`
     );
 
     return res.status(200).json({
       received: true,
-      deploymentId,
+      versionId,
       status,
       timestamp: timestamp || new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error(`[Webhook] Failed to process deployment webhook`, {
-      deploymentId,
+      versionId,
       error: error.message,
     });
 
