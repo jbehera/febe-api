@@ -6,9 +6,11 @@ import { handleDeploymentWebhook, handlePublishWebhook } from '../controllers/we
 const router = Router();
 
 const DeploymentWebhookBody = z.object({
-  deploymentId: z.string(),
+  // deploymentId: z.string(),
   status: z.enum(['success', 'failed', 'in_progress']),
   versionId: z.string().optional(),
+  graphQlUrl: z.string().optional(),
+  restUrl: z.string().optional(),
   environment: z.string().optional(),
   message: z.string().optional(),
   timestamp: z.string().optional(),

@@ -194,7 +194,8 @@ export async function deployVersion(req: Request, res: Response) {
     projectName,
     selectedConfigId,
     replicas,
-    deploymentModel
+    deploymentModel,
+    applicationName,
   } = req.body;
 
   const version = await versionService.getVersionById(versionId);
@@ -227,6 +228,7 @@ export async function deployVersion(req: Request, res: Response) {
         organizationID: userSettings.orgId,
         subOrganizationID: userSettings.subOrgId || '',
         version: version.name,
+        domain: applicationName,
         tables: transformedJson.tables,
       },
     },
@@ -247,7 +249,8 @@ export async function deployVersion(req: Request, res: Response) {
     });
 
     console.log(deployment);
-    return res.status(response.status).send('Schema deployed successfully!');
+
+    return res.status(200).send('Schema deployed successfully!');
   } catch (error) {
     // 4. Handle publish failure: revert status
     console.error('Schema deploy failed:', error);
